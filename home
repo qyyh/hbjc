@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="format-detection" content="telephone=no,email=no">
+    <script src="./vue.js"></script>
+    <script src="./axios.min.js"></script>
+
+    <title>检测报告</title>
+    <style>
+        html {
+            font-size: 14px
+        }
+        
+        * {
+            padding: 0px;
+            margin: 0px;
+            box-sizing: border-box;
+        }
+        
+        .app {
+            padding: 15px;
+            position: absolute;
+            background: url(./bg.jpg) no-repeat center;
+            background-size: 100% 100%;
+            width: 100%;
+            height: 100%;
+            left: 0px;
+            top: 0px;
+        }
+        
+        .info {
+            /* height: 5rem; */
+            /* background: #cde1fb; */
+            position: absolute;
+            left: 1.5rem;
+            right: 1.5rem;
+            top: 35%;
+            transform: translate(0, -50%);
+        }
+        
+        .info>.list:first-child {
+            border-top: none
+        }
+        
+        .list {
+            display: flex;
+            border-top: 1px solid #4491f1;
+            background: #cde1fb;
+        }
+        
+        .list>span:first-child {
+            width: 6.5rem;
+            text-align: right;
+            background: #abcdf7;
+            border-right: 1px solid #4491f1;
+            font-weight: bold;
+        }
+        
+        .list>a {
+            display: block;
+            font-size: 1rem;
+            padding: 0.4rem 0.5rem;
+            color: #333;
+        }
+        
+        .list>span:nth-of-type(2),
+        .list>a {
+            flex: 1;
+        }
+        
+        .list>span {
+            display: block;
+            font-size: 1rem;
+            padding: 0.4rem 0.5rem;
+        }
+        
+        .info-decorate {
+            width: 100%;
+            height: 2.5rem;
+            background: url(./bg1.svg) no-repeat center;
+            background-size: 100% 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app" id="app">
+        <div class="info">
+            <div class="info-decorate"></div>
+            <div class="list">
+                <span>编号</span>
+                <span>{{value.ordernumber}}</span>
+            </div>
+            <div class="list">
+                <span>样品名称</span>
+                <span>非道路机械排气烟度</span>
+            </div>
+            <div class="list">
+                <span>检验类别</span>
+                <span>委托检验</span>
+            </div>
+            <div class="list">
+                <span>检验单位</span>
+                <span>{{value.detection_name}}</span>
+            </div>
+            <!-- <div class="list">
+                <span>联系电话</span>
+                <span>{{value.phone}}</span>
+            </div> -->
+            <div class="list">
+                <span>附件</span>
+                <a :href="pdfUrl">{{text}}</a>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    const url = 'http://172.18.0.110:12306/nrmm/'
+
+    function getQueryVariable(variable) {
+        var query = window.location.search.substring(1);
+        var vars = query.split("&");
+        for (var i = 0; i < vars.length; i++) {
+            var pair = vars[i].split("=");
+            if (pair[0] == variable) {
+                return pair[1];
+            }
+        }
+        return (false);
+    }
+    var app = new Vue({
+        el: '#app',
+        data: {
+            id: null,
+            text: "点击下载",
+            value: {
+                ordernumber: '-',
+                detection_name: '-',
+                phone: '-'
+            },
+        },
+        mounted() {
+            this.request()
+        },
+        computed: {
+            pdfUrl() {
+                if(this.value.attachment){
+                    this.text = '点击下载';
+                    return `/nrmm/detectionRes/downloadPDF?id=${this.id}`;
+                }else{
+                    this.text = '未上传附件';
+                    return false;
+                }
+            }
+        },
+        methods: {
+            urlSearch() {
+                this.id = getQueryVariable('id')
+            },
+            request() {
+                let that = this;
+                this.urlSearch();
+                axios({
+                    url: `/nrmm/detectionRes/details`,
+                    method: 'post',
+                    params: {
+                        id: that.id
+                    }
+                }).then(res => {
+                    if (res.data.code === '0000') {
+                        that.value = res.data.data[0];
+                    }
+                })
+            }
+        }
+    })
+</script>
+
+</html>
